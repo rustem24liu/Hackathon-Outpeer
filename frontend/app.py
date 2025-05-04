@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 import json
+
 from utils import (
     get_api_url, get_token, save_token, 
     get_categories, get_tasks, get_task, 
@@ -40,6 +41,13 @@ def navigate_to(page):
         st.session_state.selected_solution = None
     elif page == 'ai_assistant':
         st.session_state.selected_chat = None
+    
+    # Используем st.rerun() вместо st.experimental_rerun()
+    st.rerun()
+
+
+
+
 
 # Верхняя панель навигации
 def render_navbar():
@@ -274,27 +282,30 @@ def render_solutions_page():
 
 # Страница ИИ-ассистента
 def render_ai_assistant():
-    st.title("🤖 ИИ-Ассистент")
+    st.title("🤖 ИИ-Ассистент", anchor=False)
     
     if not st.session_state.is_authenticated:
         st.warning("Необходимо войти в систему, чтобы использовать ИИ-ассистента")
-        if st.button("Войти", key="login_ai_assistant"):  # Добавлен уникальный ключ
+        if st.button("Войти", key="login_ai_assistant"):
             navigate_to("login")
         return
     
+    # Создаем два столбца для лучшей компоновки
+    chat_col, sidebar_col = st.columns([3, 1])
+    
     # Боковая панель с чатами
-    with st.sidebar:
+    with sidebar_col:
         st.header("Ваши чаты")
         
         # Создание нового чата
-        new_chat_title = st.text_input("Название нового чата")  # Определяем переменную здесь
-        if st.button("Создать чат", key="create_chat_button"):  # Добавлен уникальный ключ
+        new_chat_title = st.text_input("Название нового чата", key="new_chat_title_input")
+        if st.button("Создать чат", key="create_chat_button"):
             if new_chat_title:
                 try:
                     api_url = get_api_url("ai-chats/")
                     print(f"API URL для создания чата: {api_url}")
                     
-                    headers = {"Authorization": f"Bearer {st.session_state.token}"}
+                    headers = {"Authorization": f"Token {st.session_state.token}"}
                     print(f"Заголовки: {headers}")
                     
                     payload = {"title": new_chat_title}
@@ -314,104 +325,132 @@ def render_ai_assistant():
                         st.session_state.selected_chat = chat["id"]
                         st.experimental_rerun()
                     else:
-                        st.error("Не удалось создать чат")
-                        print(f"Подробности ошибки: {response.text}")
+                        st.error(f"Не удалось создать чат: {response.status_code} - {response.text}")
                 except Exception as e:
-                    st.error("Не удалось создать чат")
-                    print(f"Исключение: {str(e)}")
+                    import traceback
+                    error_details = traceback.format_exc()
+                    print(f"Подробности исключения:\n{error_details}")
+                    st.error(f"Не удалось создать чат: {str(e)}")
         
         st.divider()
         
         # Список существующих чатов
         chats = get_ai_chats()
-        for chat in chats:
-            if st.button(chat["title"], key=f"chat_{chat['id']}", use_container_width=True):  # Добавлен уникальный ключ
+        
+        # Добавьте проверку типа данных
+        print(f"Тип переменной chats: {type(chats)}")
+        print(f"Содержимое chats: {chats}")
+        
+        # Список для прошедших проверку чатов
+        valid_chats = []
+        
+        # Проверяем каждый элемент
+        if isinstance(chats, list):
+            for chat in chats:
+                if isinstance(chat, dict) and "id" in chat and "title" in chat:
+                    valid_chats.append(chat)
+        elif isinstance(chats, dict) and "results" in chats:
+            for chat in chats["results"]:
+                if isinstance(chat, dict) and "id" in chat and "title" in chat:
+                    valid_chats.append(chat)
+        
+        # Используем только правильно структурированные чаты
+        for i, chat in enumerate(valid_chats):
+            if st.button(chat["title"], key=f"chat_{chat['id']}_{i}", use_container_width=True):
                 st.session_state.selected_chat = chat["id"]
                 st.experimental_rerun()
-# Страница входа
-def render_login():
-    st.title("🔑 Вход в систему")
     
-    if st.session_state.is_authenticated:
-        st.success("Вы уже вошли в систему")
-        if st.button("Перейти к заданиям"):
-            navigate_to("tasks")
-        return
-    
-    with st.form("login_form"):
-        username = st.text_input("Имя пользователя")
-        password = st.text_input("Пароль", type="password")
-        
-        submitted = st.form_submit_button("Войти")
-        
-        if submitted:
-            if not username or not password:
-                st.error("Введите имя пользователя и пароль")
+    # Основная область чата
+    with chat_col:
+        if st.session_state.selected_chat:
+            chat = get_ai_chat(st.session_state.selected_chat)
+            
+            if chat and "title" in chat:
+                st.subheader(chat["title"])
+                
+                # Создаем контейнер для истории сообщений
+                chat_container = st.container()
+                
+                # Отображение сообщений
+                messages = []
+                if "messages" in chat and isinstance(chat["messages"], list):
+                    messages = chat["messages"]
+                
+                with chat_container:
+                    for message in messages:
+                        if isinstance(message, dict) and "role" in message and "content" in message:
+                            if message["role"] == "user":
+                                with st.chat_message("user"):
+                                    st.write(message["content"])
+                            elif message["role"] == "assistant":
+                                with st.chat_message("assistant"):
+                                    st.write(message["content"])
+                            # Системные сообщения не отображаем
+                
+                # Поле для ввода сообщения
+                user_message = st.chat_input("Введите сообщение...")
+                if user_message:
+                    with st.chat_message("user"):
+                        st.write(user_message)
+                    
+                    with st.spinner("ИИ думает..."):
+                        try:
+                            response = send_ai_message(st.session_state.selected_chat, user_message)
+                            
+                            # Проверяем тип и структуру ответа
+                            if isinstance(response, list):
+                                for msg in response:
+                                    if isinstance(msg, dict) and msg.get("role") == "assistant":
+                                        with st.chat_message("assistant"):
+                                            st.write(msg.get("content", "Пустой ответ"))
+                            elif isinstance(response, str):
+                                with st.chat_message("assistant"):
+                                    st.write(response)
+                            elif isinstance(response, dict):
+                                # Прямой ответ в виде словаря
+                                if "content" in response:
+                                    with st.chat_message("assistant"):
+                                        st.write(response["content"])
+                                # Словарь из успешной операции API
+                                elif "response" in response:
+                                    with st.chat_message("assistant"):
+                                        st.write(response["response"])
+                            else:
+                                st.error("Получен неизвестный формат ответа")
+                        except Exception as e:
+                            st.error(f"Ошибка при отправке сообщения: {str(e)}")
             else:
-                with st.spinner("Выполняется вход..."):
-                    token = login(username, password)
-                    if token:
-                        st.session_state.token = token
-                        st.session_state.is_authenticated = True
-                        save_token(token)
-                        st.success("Вход выполнен успешно!")
-                        st.session_state.current_page = "tasks"  # Изменяем страницу сразу
-                    else:
-                        st.error("Неверное имя пользователя или пароль")
+                st.error("Не удалось загрузить чат")
+        else:
+            st.info("Выберите чат или создайте новый")
+            
+            # Добавляем информацию о возможностях ИИ-ассистента
+            st.markdown("""
+            ### Что умеет ИИ-ассистент:
+            - Помогать с решением задач
+            - Объяснять алгоритмы и код
+            - Отвечать на вопросы по программированию
+            - Генерировать решения для заданий
+            """)
 
-# Основная функция приложения
 def main():
-    render_navbar()
-    
-    # Отображение нужной страницы в зависимости от состояния
-    if st.session_state.current_page == 'tasks':
-        render_tasks_page()
-    elif st.session_state.current_page == 'task_detail':
-        render_task_detail()
-    elif st.session_state.current_page == 'create_task':
-        render_create_task()
-    elif st.session_state.current_page == 'solutions':
-        render_solutions_page()
-    elif st.session_state.current_page == 'solution_detail':
-        render_solution_detail()
-    elif st.session_state.current_page == 'ai_assistant':
-        render_ai_assistant()
-    elif st.session_state.current_page == 'login':
-        render_login()
+    st.title("Визуальная библиотека решений")
+    st.write("Это тестовая страница")
 
-
-# Находим этот блок кода
-if st.button("Создать чат"):
-    if new_chat_title:
-        try:
-            api_url = get_api_url("ai-chats/")
-            print(f"API URL для создания чата: {api_url}")  # Отладочный вывод
-            
-            headers = {"Authorization": f"Bearer {st.session_state.token}"}
-            print(f"Заголовки: {headers}")  # Отладка заголовков
-            
-            payload = {"title": new_chat_title}
-            print(f"Отправляемые данные: {payload}")  # Отладка данных
-            
-            response = requests.post(
-                api_url, 
-                json=payload,
-                headers=headers
-            )
-            
-            print(f"Статус ответа: {response.status_code}")  # Отладка статуса
-            print(f"Ответ сервера: {response.text}")  # Отладка ответа
-            
-            if response.status_code == 201:
-                chat = response.json()
-                st.session_state.selected_chat = chat["id"]
-                st.experimental_rerun()
-            else:
-                st.error("Не удалось создать чат")
-                print(f"Подробности ошибки: {response.text}")  # Детали ошибки
-        except Exception as e:
-            st.error("Не удалось создать чат")
-            print(f"Исключение: {str(e)}")  # Печать исключения
+def main():
+    try:
+        render_navbar()
+        
+        # Отображение нужной страницы
+        if st.session_state.current_page == 'tasks':
+            render_tasks_page()
+        elif st.session_state.current_page == 'ai_assistant':
+            render_ai_assistant()
+        # и т.д.
+    except Exception as e:
+        st.error(f"Произошла ошибка: {str(e)}")
+        import traceback
+        st.code(traceback.format_exc())
 
 
 if __name__ == "__main__":

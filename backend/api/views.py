@@ -1,23 +1,14 @@
 from rest_framework import viewsets, permissions, status, filters
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from .models import Category, Task, Solution, SolutionStep, AIChat, AIMessage
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-
-from rest_framework import viewsets, permissions, status, filters
-from rest_framework.response import Response
-from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.contrib.auth import authenticate  # Добавьте эту строку
-from django.contrib.auth.models import User
-from .models import Category, Task, Solution, SolutionStep, AIChat, AIMessage
-from rest_framework import serializers
+from rest_framework.decorators import action
+from rest_framework import status
 # Сериализаторы
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -97,6 +88,7 @@ class SolutionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+# В файле api/views.py - исправьте класс AIChatViewSet
 class AIChatViewSet(viewsets.ModelViewSet):
     serializer_class = AIChatSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -114,6 +106,40 @@ class AIChatViewSet(viewsets.ModelViewSet):
             role='system',
             content="Вы помощник в визуальной библиотеке решений задач. Помогайте пользователям с решением задач, объяснением алгоритмов и кода."
         )
+    
+    @action(detail=True, methods=['post'])
+    def add_message(self, request, pk=None):
+        """Добавить сообщение в чат и получить ответ от ИИ"""
+        chat = self.get_object()
+        message_content = request.data.get('message', '')
+        
+        if not message_content:
+            return Response({"error": "Сообщение не может быть пустым"}, 
+                         status=status.HTTP_400_BAD_REQUEST)
+        
+        # Сохраняем сообщение пользователя
+        user_msg = AIMessage.objects.create(
+            chat=chat,
+            role='user',
+            content=message_content
+        )
+        
+        # Имитация ответа от ИИ (заглушка)
+        ai_content = "Ответ от ИИ-ассистента на ваше сообщение: " + message_content
+        
+        # Сохраняем ответ ассистента
+        assistant_msg = AIMessage.objects.create(
+            chat=chat,
+            role='assistant',
+            content=ai_content
+        )
+        
+        # Возвращаем новые сообщения
+        serializer = AIMessageSerializer(
+            [user_msg, assistant_msg], 
+            many=True
+        )
+        return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -125,46 +151,3 @@ def login_view(request):
         token, _ = Token.objects.get_or_create(user=user)
         return Response({'token': token.key})
     return Response({'error': 'Неверное имя пользователя или пароль'}, status=400)
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def ai_assistant(request):
-    """Получить ответ от ИИ ассистента"""
-    from .ai_service import get_ai_response
-    
-    message = request.data.get('message', '')
-    if not message:
-        return Response({"error": "Сообщение не может быть пустым"}, 
-                     status=status.HTTP_400_BAD_REQUEST)
-    
-    # Создаем простую историю сообщений
-    messages = [
-        {"role": "system", "content": "Вы помощник в визуальной библиотеке решений задач. Помогаете с решением задач, объяснением алгоритмов и кода."},
-        {"role": "user", "content": message}
-    ]
-    
-    try:
-        # Получаем ответ от ChatGPT
-        ai_response = get_ai_response(messages)
-        return Response({"response": ai_response})
-    except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class AIChatViewSet(viewsets.ModelViewSet):
-    serializer_class = AIChatSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    
-    def get_queryset(self):
-        return AIChat.objects.filter(user=self.request.user)
-    
-    def perform_create(self, serializer):
-        chat = serializer.save(user=self.request.user)
-        
-        # Создаем системное сообщение
-        AIMessage.objects.create(
-            chat=chat,
-            role='system',
-            content="Вы помощник в визуальной библиотеке решений задач. Помогайте пользователям с решением задач, объяснением алгоритмов и кода."
-        )
-

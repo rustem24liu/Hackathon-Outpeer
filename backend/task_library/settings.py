@@ -12,7 +12,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-for-developmen
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 # OpenAI API settings
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+OPENAI_API_KEY = "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"
 
 # Application definition
 

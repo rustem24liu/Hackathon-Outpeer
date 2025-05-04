@@ -46,12 +46,15 @@ def login(username, password):
         return None
 
 def api_request(endpoint, method="GET", data=None, params=None, auth_required=True):
-    """Выполнить запрос к API с обработкой ошибок"""
     url = get_api_url(endpoint)
     headers = {}
     
-    if auth_required and st.session_state.is_authenticated:
-        headers["Authorization"] = f"Bearer {st.session_state.token}"
+    if auth_required and st.session_state.is_authenticated and st.session_state.token:
+        # Используем формат "Token [ваш_токен]" вместо "Bearer [ваш_токен]"
+        headers["Authorization"] = f"Token {st.session_state.token}"
+        print(f"Заголовок авторизации: {headers['Authorization']}")
+    
+    # Остальной код функции...
     
     try:
         if method == "GET":
@@ -160,9 +163,13 @@ def get_ai_chats():
 def get_ai_chat(chat_id):
     """Получить детали чата с ИИ-ассистентом по ID"""
     try:
-        return api_request(f"ai-chats/{chat_id}/")
+        # Печатаем токен для отладки (только для разработки)
+        print(f"Токен при запросе чата: {st.session_state.token}")
+        
+        # Явно указываем, что запрос требует аутентификации
+        return api_request(f"ai-chats/{chat_id}/", auth_required=True)
     except Exception as e:
-        st.error(f"Ошибка при получении чата: {str(e)}")
+        print(f"Ошибка при получении чата: {str(e)}")
         return {"title": "Ошибка", "messages": []}
 
 def send_ai_message(chat_id, message):
