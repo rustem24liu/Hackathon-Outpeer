@@ -1,0 +1,67 @@
+[
+    {
+        "id": "rating1-id-12345",
+        "solution_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+        "user_id": "user2-id-67890",
+        "rating": 5,
+        "created_at": 1683043200
+    },
+    {
+        "id": "rating2-id-67890",
+        "solution_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+        "user_id": "user3-id-abcde",
+        "rating": 4,
+        "created_at": 1683129600
+    },
+    {
+        "id": "rating3-id-abcde",
+        "solution_id": "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+        "user_id": "user1-id-12345",
+        "rating": 4,
+        "created_at": 1685721600
+    },
+    {
+        "id": "rating4-id-fghij",
+        "solution_id": "2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e",
+        "user_id": "user3-id-abcde",
+        "rating": 5,
+        "created_at": 1685808000
+    },
+    {
+        "id": "rating5-id-klmno",
+        "solution_id": "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+        "user_id": "user1-id-12345",
+        "rating": 5,
+        "created_at": 1688313600
+    },
+    {
+        "id": "rating6-id-pqrst",
+        "solution_id": "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+        "user_id": "user2-id-67890",
+        "rating": 4,
+        "created_at": 1688400000
+    },
+    {
+        "id": "be1b8091-b0c7-434b-bf7b-027908894115",
+        "solution_id": "3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f",
+        "user_id": "d9ce8c6f-ada4-4d78-b2ac-5adfc97e8479",
+        "rating": 1,
+        "created_at": 1746266763.138878
+    },
+    {
+        "id": "ca121481-82ed-4d1d-85c4-5101676fede7",
+        "solution_id": "320ac22b-d915-4fdf-8597-af396c63fb74",
+        "user_id": "d9ce8c6f-ada4-4d78-b2ac-5adfc97e8479",
+        "rating": 5,
+        "created_at": 1746270648.488697,
+        "updated_at": 1746270673.5997
+    },
+    {
+        "id": "5adcad8b-ae52-4b3e-8315-d48bab2b8397",
+        "solution_id": "320ac22b-d915-4fdf-8597-af396c63fb74",
+        "user_id": "736b24ed-731a-412d-940e-244d54fe4d04",
+        "rating": 5,
+        "created_at": 1746275179.976947,
+        "updated_at": 1746275181.690237
+    }
+]

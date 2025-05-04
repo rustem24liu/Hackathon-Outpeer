@@ -1,0 +1,44 @@
+[
+    {
+        "id": "user1-id-12345",
+        "username": "ivanov_ai",
+        "password_hash": "salt$hash",
+        "created_at": 1682870400
+    },
+    {
+        "id": "user2-id-67890",
+        "username": "petrova_ml",
+        "password_hash": "salt$hash",
+        "created_at": 1685548800
+    },
+    {
+        "id": "user3-id-abcde",
+        "username": "sidorov_ds",
+        "password_hash": "salt$hash",
+        "created_at": 1688140800
+    },
+    {
+        "id": "ce303465-4626-4c9c-afc6-40728c494a38",
+        "username": "frizzy",
+        "password_hash": "e8c3296fd2acaa89ba25d005e5a72bf3$c77cee39ba07e57d5b4f463df59b4153c9e9b956ed3d7ee8d53ebc6f691fb43f",
+        "created_at": 1746263930.329502
+    },
+    {
+        "id": "d9ce8c6f-ada4-4d78-b2ac-5adfc97e8479",
+        "username": "Test",
+        "password_hash": "3cb5aef7d3bf388a841a81a06a53d4a9$383f79b3cdb501a2d4d7943f46a338f28479ffdfbde1f449c1e0e53be96aaec7",
+        "created_at": 1746263931.747196
+    },
+    {
+        "id": "96b93a98-bcf6-4c4a-8e18-06c956129fb8",
+        "username": "Rasul",
+        "password_hash": "cde7042a3d18abeabb189c0be2889da5$5bd9a31817037a8bd928b02acae1497da5d6b3fcd1d285794baa0aee9462f6c8",
+        "created_at": 1746264847.487141
+    },
+    {
+        "id": "736b24ed-731a-412d-940e-244d54fe4d04",
+        "username": "Test1",
+        "password_hash": "125b6a83e0643650ecdfd118a53aee54$bf5e9349765a6a0c5c79ac4b2a440a3ae07adcff2d3a2e865de457f92bfb05f1",
+        "created_at": 1746275146.767983
+    }
+]
